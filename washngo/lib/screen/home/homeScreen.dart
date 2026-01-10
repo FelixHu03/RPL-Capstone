@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:washngo/layouts/bgHomeScreen.dart';
-import 'package:washngo/screen/home/accountScreenContent.dart';
+import 'package:washngo/screen/home/content/accountScreenContent.dart';
 import 'package:washngo/screen/home/historyScreenContent.dart';
+import 'package:washngo/screen/home/services/executiveWash.dart';
 
 class Homescreen extends StatefulWidget {
-  const Homescreen({super.key});
+  final String email;
+ const Homescreen({super.key, required this.email});
 
   @override
   State<Homescreen> createState() => _HomescreenState();
@@ -22,9 +24,21 @@ class _HomescreenState extends State<Homescreen> {
 
   // Data Promo
   final List<Map<String, dynamic>> _promoBanners = [
-    {"color": Colors.white, "text": "", "image": "assets/spacialPromo/spacialPromo1.png"},
-    {"color": Colors.white, "text": "", "image": "assets/spacialPromo/spacialPromo1.png"},
-    {"color": Colors.white, "text": "", "image": "assets/spacialPromo/spacialPromo1.png"},
+    {
+      "color": Colors.white,
+      "text": "",
+      "image": "assets/spacialPromo/spacialPromo1.png",
+    },
+    {
+      "color": Colors.white,
+      "text": "",
+      "image": "assets/spacialPromo/spacialPromo2.png",
+    },
+    {
+      "color": Colors.white,
+      "text": "",
+      "image": "assets/spacialPromo/spacialPromo3.png",
+    },
   ];
 
   @override
@@ -68,16 +82,16 @@ class _HomescreenState extends State<Homescreen> {
   @override
   Widget build(BuildContext context) {
     Widget bodyContent;
-    
+
     switch (_selectedIndex) {
       case 0:
-        bodyContent = _buildHomeContent(); 
+        bodyContent = _buildHomeContent();
         break;
       case 1:
-        bodyContent = const HistoryScreen(); 
+        bodyContent = HistoryScreen(email: widget.email);
         break;
       case 2:
-        bodyContent = const Accountscreencontent(); 
+        bodyContent = Accountscreencontent(email: widget.email);
         break;
       default:
         bodyContent = _buildHomeContent();
@@ -85,21 +99,45 @@ class _HomescreenState extends State<Homescreen> {
 
     // 4. Return Wrapper Utama
     return Bghomescreen(
-      currentIndex: _selectedIndex, 
-      onTap: _onFooterTap,          
-      child: bodyContent,           
+      currentIndex: _selectedIndex,
+      onTap: _onFooterTap,
+      child: bodyContent,
     );
   }
 
   // WIDGET KONTEN HOME
   Widget _buildHomeContent() {
     final List<Map<String, dynamic>> services = [
-      {'title': 'Executive\nWash', 'image': 'assets/images/executive.png', 'page': null},
-      {'title': 'Regular\nWash', 'image': '', 'page': null},
-      {'title': 'Dry\nClean', 'image': '', 'page': null},
-      {'title': 'Car\nPolishing', 'image': '', 'page': null},
-      {'title': 'Interior\nDetailing', 'image': '', 'page': null},
-      {'title': 'Engine\nWash', 'image': '', 'page': null},
+      {
+        'title': 'Executive\nWash',
+        'image': 'assets/images/ExecutiveWash.png',
+        'page':  Executivewash(email: widget.email),
+      },
+      {
+        'title': 'Fogging\nService',
+        'image': 'assets/images/FoggingService.png',
+        'page': null,
+      },
+      {
+        'title': 'Undercarriage\nWash',
+        'image': 'assets/images/UndercarriageWash.png',
+        'page': null,
+      },
+      {
+        'title': 'Express\nWash',
+        'image': 'assets/images/ExpressWash.png',
+        'page': null,
+      },
+      {
+        'title': 'Complete\nWash',
+        'image': 'assets/images/ComplateWash.png',
+        'page': null,
+      },
+      {
+        'title': 'Automatic\nWash',
+        'image': 'assets/images/OtomaticWash.png',
+        'page': null,
+      },
     ];
 
     return Container(
@@ -114,7 +152,7 @@ class _HomescreenState extends State<Homescreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
-          
+
           // Grid Menu
           Expanded(
             child: GridView.builder(
@@ -130,10 +168,29 @@ class _HomescreenState extends State<Homescreen> {
                 return _buildServiceItem(
                   title: services[index]['title'],
                   imagePath: services[index]['image'],
-                  color: index == 0 ? const Color(0xFF2E8B99) : Colors.grey[300]!,
-                  isPlaceholder: index != 0,
+                  color: index == 0
+                      ? const Color(0xFF2E8B99)
+                      : Colors.grey[300]!,
+                  isPlaceholder: false,
                   onTap: () {
-                     // Navigasi menu service (bukan footer)
+                    final Widget? destinationPage = services[index]['page'];
+
+                    if (destinationPage != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => destinationPage,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Halaman ${services[index]['title']} belum tersedia",
+                          ),
+                        ),
+                      );
+                    }
                   },
                 );
               },
@@ -143,13 +200,17 @@ class _HomescreenState extends State<Homescreen> {
           const SizedBox(height: 25),
           const Text(
             'Special Promo',
-            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 25),
 
           // Promo Banner
           SizedBox(
-            height: 250, 
+            height: 250,
             width: double.infinity,
             child: Stack(
               children: [
@@ -170,7 +231,9 @@ class _HomescreenState extends State<Homescreen> {
                   },
                 ),
                 Positioned(
-                  bottom: 10, left: 0, right: 0,
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
@@ -180,7 +243,9 @@ class _HomescreenState extends State<Homescreen> {
                         width: _currentPage == index ? 12 : 8,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: _currentPage == index ? const Color(0xFF2E8B99) : Colors.grey,
+                          color: _currentPage == index
+                              ? const Color(0xFF2E8B99)
+                              : Colors.grey,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -214,25 +279,44 @@ class _HomescreenState extends State<Homescreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.black12, width: 1),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5, offset: const Offset(0, 3)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 5,
+                    offset: const Offset(0, 3),
+                  ),
                 ],
               ),
               child: Center(
                 child: isPlaceholder
                     ? const SizedBox()
-                    : Padding(padding: const EdgeInsets.all(10.0), child: Image.asset(imagePath, fit: BoxFit.contain)),
+                    : Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Image.asset(imagePath, fit: BoxFit.contain),
+                      ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Text(isPlaceholder ? "" : title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, height: 1.2)),
+          Text(
+            isPlaceholder ? "" : title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+          ),
         ],
       ),
     );
   }
 
   // Widget Banner
-  Widget _buildPromoBanner({required Color color, required String text, String? image}) {
+  Widget _buildPromoBanner({
+    required Color color,
+    required String text,
+    String? image,
+  }) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 5),

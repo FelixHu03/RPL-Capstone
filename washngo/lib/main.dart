@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:washngo/layouts/bgWelcome.dart';
-import 'package:washngo/screen/home/homeScreen.dart';
 import 'package:washngo/screen/welcome/loginScreen.dart';
-import 'package:washngo/screen/welcome/registerScreen.dart'; 
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Homescreen(), 
+      home: WelcomeScreen(), 
     );
   }
 }
@@ -34,8 +32,8 @@ class WelcomeScreen extends StatelessWidget {
             
             Image.asset(
               'assets/images/executive.png',
-              width: 20,
-              height: 20,
+              width: 300,
+              height: 300,
               fit: BoxFit.contain,
             ),
             
@@ -73,7 +71,7 @@ class WelcomeScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const registeScreen(),
+                          builder: (context) => const loginScreen(),
                         ),
                       );
                     },

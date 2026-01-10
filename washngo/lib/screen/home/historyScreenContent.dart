@@ -1,31 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart'; // Pastikan package intl sudah ada
+import 'package:flutter/foundation.dart'; // Untuk kIsWeb
 
-class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key});
+class HistoryScreen extends StatefulWidget {
+  final String email; // Menerima email dari Home
+  const HistoryScreen({super.key, required this.email});
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  List<dynamic> _historyData = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
+
+  Future<void> _fetchHistory() async {
+    // Tentukan URL API
+    String baseUrl;
+    if (kIsWeb) {
+      baseUrl = 'http://localhost/washngo_api';
+    } else {
+      baseUrl = 'http://192.168.1.28/washngo_api'; 
+    }
+
+    final url = Uri.parse('$baseUrl/get_user_history.php');
+
+    try {
+      final response = await http.post(url, body: {'email': widget.email});
+      final data = jsonDecode(response.body);
+
+      if (data['value'] == 1) {
+        if (mounted) {
+          setState(() {
+            _historyData = data['data'];
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print("Error: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> historyData = [
-      {
-        'date': 'Rabu, 17 Desember 2025',
-        'bilik': 'Bilik 1',
-        'plat': 'BG 1234 YZX',
-        'time': '13:00 - 14:30',
-      },
-      {
-        'date': 'Kamis, 18 Desember 2025',
-        'bilik': 'Bilik 2',
-        'plat': 'B 5678 AA',
-        'time': '10:00 - 11:30',
-      },
-      {
-        'date': 'Jumat, 19 Desember 2025',
-        'bilik': 'Bilik 1',
-        'plat': 'BG 9999 ZZ',
-        'time': '15:00 - 16:30',
-      },
-    ];
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -39,9 +68,11 @@ class HistoryScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: historyData.isEmpty
-                ? _buildEmptyState()
-                : _buildHistoryList(historyData),
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator()) 
+                : (_historyData.isEmpty
+                    ? _buildEmptyState()
+                    : _buildHistoryList()),
           ),
         ],
       ),
@@ -57,12 +88,20 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryList(List<Map<String, String>> data) {
+  Widget _buildHistoryList() {
     return ListView.builder(
-      itemCount: data.length,
+      itemCount: _historyData.length,
       padding: const EdgeInsets.only(bottom: 80),
       itemBuilder: (context, index) {
-        final item = data[index];
+        final item = _historyData[index];
+        
+        // FORMAT TANGGAL
+        // Dari "2025-12-17" menjadi format yang lebih rapi
+        // Jika ingin Bahasa Indonesia ("Rabu..."), perlu setup locale tambahan
+        // Di sini saya pakai format standar dulu: "EEEE, d MMMM y"
+        DateTime date = DateTime.parse(item['booking_date']);
+        String formattedDate = DateFormat('EEEE, d MMMM y').format(date); 
+
         return Container(
           margin: const EdgeInsets.only(bottom: 15),
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
@@ -75,7 +114,7 @@ class HistoryScreen extends StatelessWidget {
             children: [
               // Baris Tanggal
               Text(
-                item['date']!,
+                formattedDate, 
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
@@ -88,29 +127,34 @@ class HistoryScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Bilik
+                  // Bilik (bay_number dari DB)
                   SizedBox(
                     width: 60,
                     child: Text(
-                      item['bilik']!,
+                      "Bilik ${item['bay_number']}",
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
 
-                  // Plat Nomor (Tengah)
-                  Text(
-                    item['plat']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  // Plat Nomor (vehicle_name dari DB)
+                  // Karena di DB tersimpan "Plat (Merk)", kita tampilkan saja langsung
+                  Expanded( // Pakai Expanded agar teks panjang tidak error
+                    child: Text(
+                      item['vehicle_name'],
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14, // Sedikit dikecilkan agar muat
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
 
-                  // Jam
+                  // Jam (schedule_time dari DB)
                   SizedBox(
                     width: 90,
                     child: Text(
-                      item['time']!,
+                      item['schedule_time'],
                       textAlign: TextAlign.end,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),

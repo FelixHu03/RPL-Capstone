@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:washngo/layouts/bgHomeScreen.dart';
-import 'package:washngo/screen/home/settingScreenContent.dart';
+import 'package:washngo/screen/home/content/settingScreenContent.dart';
 
 class SettingScreen extends StatelessWidget {
   const SettingScreen({super.key});

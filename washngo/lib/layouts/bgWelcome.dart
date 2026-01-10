@@ -13,6 +13,8 @@ class bgWelcome extends StatelessWidget {
       body: Stack(
         children: [
           Container(
+            width: double.infinity,
+            height: double.infinity,
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/background/backgroundWelcome.png'),
